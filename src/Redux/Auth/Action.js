@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../config/api";
 import {
   REGISTER_REQUEST, REGISTER_SUCCESS, REGISTER_FAILURE,
   LOGIN_REQUEST, LOGIN_SUCCESS, LOGIN_FAILURE,
@@ -6,21 +6,14 @@ import {
   LOGOUT
 } from "./ActionTypes";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
 /* ================= REGISTER ================= */
 export const register = (userData) => async (dispatch) => {
   dispatch({ type: REGISTER_REQUEST });
   try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/auth/signup`,
-      userData,
-      { headers: { "Content-Type": "application/json" } }
-    );
-
+    const { data } = await api.post("/auth/signup", userData);
     localStorage.setItem("jwt", data.jwt);
     dispatch({ type: REGISTER_SUCCESS, payload: data });
-
+    dispatch(getUser()); // 🔥 VERY IMPORTANT
     return { success: true };
   } catch (err) {
     dispatch({
@@ -35,15 +28,10 @@ export const register = (userData) => async (dispatch) => {
 export const login = (userData) => async (dispatch) => {
   dispatch({ type: LOGIN_REQUEST });
   try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/auth/signing`,
-      userData,
-      { headers: { "Content-Type": "application/json" } }
-    );
-
+    const { data } = await api.post("/auth/login", userData);
     localStorage.setItem("jwt", data.jwt);
     dispatch({ type: LOGIN_SUCCESS, payload: data });
-
+    dispatch(getUser()); // 🔥 VERY IMPORTANT
     return { success: true };
   } catch (err) {
     dispatch({
@@ -58,13 +46,7 @@ export const login = (userData) => async (dispatch) => {
 export const getUser = () => async (dispatch) => {
   dispatch({ type: GET_USER_REQUEST });
   try {
-    const token = localStorage.getItem("jwt");
-
-    const { data } = await axios.get(
-      `${API_BASE_URL}/api/users/profile`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
+    const { data } = await api.get("/api/users/profile");
     dispatch({ type: GET_USER_SUCCESS, payload: data });
   } catch (err) {
     localStorage.removeItem("jwt");
@@ -75,7 +57,6 @@ export const getUser = () => async (dispatch) => {
   }
 };
 
-/* ================= LOGOUT ================= */
 export const logout = () => (dispatch) => {
   localStorage.removeItem("jwt");
   dispatch({ type: LOGOUT });
